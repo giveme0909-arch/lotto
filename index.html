@@ -1,0 +1,87 @@
+<script>
+// 오행 분류
+const elements = {
+  wood:  [1,6,11,16,21,26,31,36,41],
+  fire:  [2,7,12,17,22,27,32,37,42],
+  earth: [3,8,13,18,23,28,33,38,43],
+  metal: [4,9,14,19,24,29,34,39,44],
+  water: [5,10,15,20,25,30,35,40,45]
+};
+
+// 1️⃣ 내 사주 오행 가중치
+const myWeights = {
+  wood: 1.2,
+  fire: 1.5,
+  earth: 1.0,
+  metal: 0.9,
+  water: 1.4
+};
+
+// 2️⃣ 주간 오행 기운 (주차 % 5 로 순환)
+function weeklyWeights(week) {
+  const order = ["wood","fire","earth","metal","water"];
+  let focus = order[week % 5];
+  let weights = { wood:1, fire:1, earth:1, metal:1, water:1 };
+  weights[focus] = 1.8; // 그 주 최강 오행
+  return weights;
+}
+
+function seededRandom(seed) {
+  return Math.abs(Math.sin(seed)) % 1;
+}
+
+function buildPool(weights) {
+  let pool = [];
+  for (let el in elements) {
+    let count = Math.round(elements[el].length * weights[el]);
+    for (let i=0;i<count;i++) pool.push(...elements[el]);
+  }
+  return pool;
+}
+
+function generateNumbers(seed, weights) {
+  const pool = buildPool(weights);
+  let nums = new Set();
+  while (nums.size < 6) {
+    seed++;
+    nums.add(pool[Math.floor(seededRandom(seed) * pool.length)]);
+  }
+  return [...nums].sort((a,b)=>a-b);
+}
+
+function generateAll() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const week = Math.ceil((((today - new Date(year,0,1)) / 86400000) + 1) / 7);
+
+  const container = document.getElementById("games");
+  container.innerHTML = "";
+
+  // 🎰 게임 1: 내 사주
+  const myNums = generateNumbers(1990090909 + year*100 + week, myWeights);
+  addGame(container, "내 사주 최적 1게임", myNums);
+
+  // 🎰 게임 2: 주간 오행
+  const weekNums = generateNumbers(year*1000 + week, weeklyWeights(week));
+  addGame(container, "이번 주 천운 1게임", weekNums);
+
+  document.getElementById("weekInfo").textContent =
+    `${year}년 ${week}주차 기준`;
+}
+
+function addGame(container, title, nums) {
+  const div = document.createElement("div");
+  div.innerHTML = `<strong>🎰 ${title}</strong>`;
+  const row = document.createElement("div");
+  row.className = "numbers";
+  nums.forEach(n=>{
+    const b=document.createElement("div");
+    b.className="ball"; b.textContent=n;
+    row.appendChild(b);
+  });
+  div.appendChild(row);
+  container.appendChild(div);
+}
+
+generateAll();
+</script>
