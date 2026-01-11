@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사주 오행 로또</title>
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: white;
+    text-align: center;
+    padding: 30px 15px;
+}
+.box {
+    background: rgba(255,255,255,0.12);
+    border-radius: 22px;
+    padding: 25px;
+    max-width: 420px;
+    margin: auto;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.35);
+}
+h1 { margin-bottom: 10px; }
+.game {
+    margin-top: 25px;
+}
+.numbers {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.ball {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #fff;
+    color: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+.info {
+    font-size: 14px;
+    opacity: 0.85;
+    margin-top: 8px;
+}
+</style>
+</head>
+<body>
+
+<h1>🔮 사주 오행 로또</h1>
+
+<div class="box">
+    <div class="info">
+        1990.09.09 오전 9시 출생<br>
+        오행 가중치 기반 · 매주 2게임
+    </div>
+
+    <div id="games"></div>
+
+    <div class="info" id="weekInfo"></div>
+</div>
+
+<script>
+// 오행 분류
+const elements = {
+    wood:  [1,6,11,16,21,26,31,36,41],
+    fire:  [2,7,12,17,22,27,32,37,42],
+    earth: [3,8,13,18,23,28,33,38,43],
+    metal: [4,9,14,19,24,29,34,39,44],
+    water: [5,10,15,20,25,30,35,40,45]
+};
+
+// 사주 오행 가중치 (1990.09.09 오전 9시 기준 설정)
+const elementWeights = {
+    wood:  1.2,   // 목
+    fire:  1.5,   // 화 (강화)
+    earth: 1.0,   // 토
+    metal: 0.9,   // 금
+    water: 1.4    // 수 (보강)
+};
+
+function seededRandom(seed) {
+    let x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+}
+
+function getWeekSeed(offset) {
+    const birthSeed = 1990090909;
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), 0, 1);
+    const week = Math.ceil((((today - firstDay) / 86400000) + firstDay.getDay() + 1) / 7);
+    return birthSeed + today.getFullYear() * 100 + week * 10 + offset;
+}
+
+function weightedPool() {
+    let pool = [];
+    for (const el in elements) {
+        const count = Math.round(elements[el].length * elementWeights[el]);
+        for (let i = 0; i < count; i++) {
+            pool.push(...elements[el]);
+        }
+    }
+    return pool;
+}
+
+function generateGame(seedBase) {
+    const pool = weightedPool();
+    let numbers = new Set();
+    let seed = seedBase;
+
+    while (numbers.size < 6) {
+        seed++;
+        let index = Math.floor(seededRandom(seed) * pool.length);
+        numbers.add(pool[index]);
+    }
+    return Array.from(numbers).sort((a,b)=>a-b);
+}
+
+function generateAll() {
+    const container = document.getElementById("games");
+    container.innerHTML = "";
+
+    for (let i = 1; i <= 2; i++) {
+        const nums = generateGame(getWeekSeed(i));
+        const gameDiv = document.createElement("div");
+        gameDiv.className = "game";
+        gameDiv.innerHTML = `<strong>🎰 ${i}게임</strong>`;
+
+        const numDiv = document.createElement("div");
+        numDiv.className = "numbers";
+
+        nums.forEach(n => {
+            const b = document.createElement("div");
+            b.className = "ball";
+            b.textContent = n;
+            numDiv.appendChild(b);
+        });
+
+        gameDiv.appendChild(numDiv);
+        container.appendChild(gameDiv);
+    }
+
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), 0, 1);
+    const week = Math.ceil((((today - firstDay) / 86400000) + firstDay.getDay() + 1) / 7);
+    document.getElementById("weekInfo").textContent =
+        `${today.getFullYear()}년 ${week}주차 기준`;
+}
+
+generateAll();
+</script>
+
+</body>
+</html>
